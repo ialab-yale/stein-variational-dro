@@ -44,7 +44,7 @@ def render_waiter(idx: int, method: str, verbose: bool = True) -> str:
 
     DATA_PATH = f"data/dynamic_waiter/pkl/traj/{method}_states-idx{idx}.pkl"
     SCENE_PARAMS_PATH = "data/dynamic_waiter/pkl/scene/scene_data.pkl"
-    OUT_PATH = f"videos/dynamic_waiter/mp4/mujoco/{method}_franka_vis_idx{idx}.mp4"
+    OUT_PATH = f"videos/dynamic_waiter/mp4/{method}_franka_vis_idx{idx}.mp4"
 
     os.makedirs(os.path.dirname(OUT_PATH), exist_ok=True)
 

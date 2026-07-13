@@ -4,14 +4,41 @@ Reference implementation for **"Distributionally Robust Control via Stein
 Variational Inference for Contact-rich Manipulation"** (Robotics: Science and
 Systems, 2026).
 
-This repository plans contact-rich manipulation under uncertain physical
-parameters (inertia, mass, friction). Instead of committing to a single
-nominal parameter estimate, it maintains a *particle ensemble* over the
-uncertain parameters and transports those particles with Stein Variational
-Gradient Descent (SVGD) toward the worst-case (adversarial) region of the
-belief, so the resulting controller is robust to the parameters it is least
-certain about. The method (**SVDRO**) is evaluated against three baselines on
-two simulated manipulation tasks, and every trial can be rendered to video.
+<p align="center">
+  <img src="assets/sim_pushT_figure.png" alt="Bimanual T-block pushing: two end effectors reorient the block with unknown mass distribution and friction to its goal pose." width="100%">
+  <br>
+  <em>Bimanual T-block pushing. Two end effectors reorient the block toward its goal pose; red curves show the Stein-inferred trajectories that adapt to parameter uncertainty.</em>
+</p>
+
+<p align="center">
+  <img src="assets/sim_waiter_figure.png" alt="Dynamic waiter: a Franka arm balances and transports a block with unknown mass distribution and friction coeff. to its goal." width="100%">
+  <br>
+  <em>Dynamic waiter. A Franka arm balances and transports a block to its goal under uncertain block inertia, mass, and friction.</em>
+</p>
+
+
+
+(Abstract): Reliable robotic manipulation requires control policies that can 
+accurately represent and adapt to uncertainty arising from contact-rich 
+interactions. Modern data-driven methods mitigate uncertainty through 
+large-scale training and computation, and degrade significantly in performance 
+with limited number of training samples. 
+By contrast, classical model-based controllers are computationally efficient 
+and reliable, but their limited ability to represent task-relevant uncertainty 
+can hinder performance in contact-rich interactions. 
+
+In this work, we propose to expand the capabilities of model-based manipulation 
+control through more flexible uncertainty modeling that retains performance 
+while exactly adapting to uncertainty. 
+Our approach casts the manipulation problem as a distributionally robust control 
+optimization and proposes a novel deterministic formulation based on Stein 
+variational inference that preserves performance while explicitly modeling 
+task-sensitive parameter uncertainty. 
+As a result, the derived controllers are more aware of task sensitivities to 
+uncertainty, yielding high reliability without compromising performance.
+Experimental results demonstrate up to 3$\times$ improved robustness across a 
+range of contact-rich manipulation tasks under broad parametric uncertainty, 
+outperforming existing model-based control methods.
 
 ---
 
@@ -73,7 +100,7 @@ conda activate stein-dro
 **Core dependencies (training):**
 
 ```bash
-pip install "jax[cpu]" numpy dill tqdm click
+pip install "jax[cpu]" numpy dill tqdm click mujoco imageio imageio-ffmpeg
 ```
 
 For GPU acceleration, install the CUDA build of JAX instead of `jax[cpu]`
@@ -107,8 +134,8 @@ dependencies entirely and always pass `--no-render`.
 ## Quick start
 
 ```bash
-# Run the dynamic-waiter task for all four methods, 32 trials each,
-# rendering an MP4 after every trial (the default).
+### Examples
+# Run the dynamic-waiter task for all four methods, 32 trials each, with rendering
 python main.py --experiment_name waiter
 
 # Run the bimanual task without rendering (no MuJoCo needed), 8 trials.
@@ -168,12 +195,6 @@ render/
 └── render_bimanual.py               Two end-effectors + T-block MuJoCo renderer.
 ```
 
-The design goal is that a **single set of methods** (`config/methods.py`) runs
-against **any experiment backend**. Each backend exposes an identical
-`Experiment` interface — cost functions, parameter priors, belief sampling,
-termination — so adding a new task means adding a new `config_<name>/`
-subpackage, nothing more.
-
 ---
 
 ## The four planners
@@ -182,18 +203,18 @@ subpackage, nothing more.
 **cost function** they plan against and in how they **update the parameter
 belief** each step:
 
-| Method   | Planning cost                    | Belief update                                   | Robust? |
-|----------|----------------------------------|-------------------------------------------------|:-------:|
-| `SVDRO`  | risk-aware (ensemble) cost       | SVGD transport toward adversarial parameters    | ✅ (ours) |
-| `EMPPI`  | risk-aware (ensemble) cost       | resample particles from the prior               | partial |
-| `MPC`    | nominal cost at the belief mean  | fixed point estimate (mean parameters)          | ❌ |
-| `DRO`    | dual / direct DRO cost           | resample particles from the prior               | baseline |
+| Method   | Planning cost                    | Belief update                                               | Robust? |
+|----------|----------------------------------|-------------------------------------------------------------|:-------:|
+| `SVDRO`  | risk-aware (ensemble) cost       | SVGD transport toward task-sensitive posterior regions      | ✅ (ours) |
+| `EMPPI`  | risk-aware (ensemble) cost       | resample particles from the prior                           | partial |
+| `MPC`    | nominal cost at the belief mean  | fixed point estimate (mean parameters)                      | ❌ |
+| `DRO`    | dual / direct DRO cost           | resample particles from the prior                           | baseline |
 
 - **SVDRO** (the proposed method) is the only one that *learns* where the
   worst-case parameters are and steers the ensemble there, rather than treating
   the belief as static or collapsing it to a mean.
 - **MPC** is the naive point-estimate controller — a lower bound on robustness.
-- **EMPPI** and **DRO** are ensemble baselines that share SVDRO's risk-aware
+- **EMPPI** and **DRO** are ensemble baselines that share similar risk-aware
   reasoning but lack the SVGD transport step.
 
 All four share `initialize` / `step` / `save` machinery in the `Exp_Utils`
@@ -328,14 +349,9 @@ task-cost comparisons.
   pass `--no-render`.
 
 - **Waiter render fails to find `panda_nohand.xml`.** The MuJoCo Menagerie
-  Franka model is missing or misplaced. See [Installation](#installation) — it
+  Franka model is missing or misplaced. See [Installation](#installation), it
   must sit at `../mujoco_menagerie/franka_emika_panda/` relative to where you
   launch `main.py`.
-
-- **`RuntimeWarning: os.fork() was called ... JAX is multithreaded`.** Harmless.
-  It originates from `imageio` launching `ffmpeg` (a `fork` + `exec`) while
-  JAX's worker threads are alive; the child immediately execs `ffmpeg`, so
-  there is no deadlock. The render modules already filter this specific warning.
 
 - **MuJoCo GL/EGL errors when rendering.** The renderers request the EGL
   backend (`MUJOCO_GL=egl`). On machines without EGL, set
@@ -361,6 +377,3 @@ If you use this code, please cite:
       url={https://arxiv.org/abs/2605.19029}, 
 }
 ```
-
-Please complete the entry with the final author list, page numbers, and DOI
-once available.

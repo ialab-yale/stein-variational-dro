@@ -45,7 +45,7 @@ def render_bimanual(idx: int, method: str, verbose: bool = True) -> str:
 
     DATA_PATH         = f"data/bimanual/pkl/traj/{method}_states-idx{idx}.pkl"
     SCENE_PARAMS_PATH = "data/bimanual/pkl/scene/scene_data.pkl"
-    OUT_PATH          = f"videos/bimanual/mp4/mujoco/{method}_vis_idx{idx}.mp4"
+    OUT_PATH          = f"videos/bimanual/mp4/{method}_vis_idx{idx}.mp4"
 
     os.makedirs(os.path.dirname(OUT_PATH), exist_ok=True)
 
