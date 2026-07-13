@@ -1,7 +1,7 @@
 # Stein Variational Distributionally Robust Planning for Contact-Rich Manipulation
 
-Reference implementation for **"Distributionally Robust Control via Stein
-Variational Inference for Contact-rich Manipulation"** (Robotics: Science and
+Reference implementation for **"[Distributionally Robust Control via Stein
+Variational Inference for Contact-rich Manipulation](https://arxiv.org/pdf/2605.19029)"** (Robotics: Science and
 Systems, 2026).
 
 <p align="center">
