@@ -13,7 +13,7 @@ Systems, 2026).
 <p align="center">
   <img src="assets/sim_waiter_figure.png" alt="Dynamic waiter: a Franka arm balances and transports a block with unknown mass distribution and friction coeff. to its goal." width="100%">
   <br>
-  <em>Dynamic waiter. A Franka arm balances and transports a block to its goal under uncertain block inertia, mass, and friction.</em>
+  <em>Dynamic waiter. A Franka arm balances and transports a block to its goal under uncertain block inertia, mass, and friction. [See hardware demo of continuous 3 minute run under real world parameter uncertainty!](https://drive.google.com/file/d/1vDYLHdLCSiGETdw9enmKbJArOOkpnLoM/view)</em>
 </p>
 
 
